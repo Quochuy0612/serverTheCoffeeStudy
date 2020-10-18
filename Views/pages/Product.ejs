@@ -8,17 +8,17 @@
 <body>
     <form action="" method="POST" enctype="multipart/form-data">
         <select name="selectproduct">
-            <% pro.forEach(function(pro){ %>
-                <option value="<%- %>">
+            <% pros.forEach(function(pro){ %>
+                <option value="<%- pro._id %>">
                     <%- pro.name %>
                 </option>
             <%});%> 
         </select>
-        <input type="text" name="txtName"/>
+        <input type="text" name="txtNameProduct"/>
         <input type="file" name="productImage"/>
         <input type="number" name="price"/>
         <input type="text" name="txtproduct"/>
-        <input type="submit" value="Add"/>
+        <input type="submit" name="btn Add" value="Add"/>
     </form>
 </body>
 </html>

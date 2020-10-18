@@ -19,10 +19,23 @@ mongoose.connect('mongodb+srv://Admin:thecoffeestudy@cluster0.cfccb.mongodb.net/
     }
 });
 
+//bcrypt
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+//jsonwebtoken
+var jwt = require('jsonwebtoken');
+var secret = "Mr.kAsh*(&!yASD??AAAA";
+
+//session
+var session = require('express-session');
+app.set('trust proxy', 1) // trust first proxy
+app.use(session({ secret: '*(A&DHha*@H46', cookie: { maxAge: 60000000 }}))
+
 //models
 const Category = require("./Models/Category");
 const Product = require("./Models/Details");
-const { JsonWebTokenError } = require("jsonwebtoken");
+const User = require("./Models/User");
 
 //multer
 var multer = require('multer');
@@ -48,92 +61,75 @@ var upload = multer({
     }
 }).single("productImage");
 
-
-
-
-
-
 app.get("/", function (req, res) {
-    res.render("Admin");
-});
-
-app.get("/login", function (req, res) {
     res.render("Login");
 });
 
-app.get("/cate", function (req, res) {
-    res.render("cate");
-});
-
-app.post("/cate", function (req, res) {
-    var newdetails = new Category({
-        name: req.body.txtCate,
-        details_id: []
-    });
-    newdetails.save(function (err) {
-        if (err) {
-            console.log("save details error: " + err);
-            res.json({ kq: 0 });
-        } else {
-            console.log("save details seccessfully");
-            res.json({ kq: 1 });
-        }
-    })
-});
-
-app.get("/product", function (req, res) {
-    Category.find(function (err, items) {
-        if (err) {
-            res.send("Error");
-        } else {
-            console.log(items);
-            res.render("Product", { pro: items });
-        }
-    })
-});
-
-
-app.post("/product", function (req, res) {
-    //upload
-    upload(req, res, function (err) {
-        if (err instanceof multer.MulterError) {
-            console.log("A Multer error occurred when uploading.");
-            res.json({ kq: 0, "err": err });
-        } else if (err) {
-            console.log("An unknown error occurred when uploading." + err);
-            res.json({ kq: 0, "err": err });
-        } else {
-            console.log("Upload is okay");
-            console.log(req.file); // Thông tin file đã upload
-            console.log(req.file.filename);
-            res.send({ kq: 1, "file": req.file });
+app.post("/", function (req, res) {
+    //Login
+    User.findOne({username:req.body.username}, function(err, item){
+        if(!err & item != null){
+            console.log("pw " + req.body.password + "....." + item.password);
+            bcrypt.compare(req.body.txtPassword, item.password, function(err2, res2){
+                if(res2 == false){
+                    res.json({kq:0, err: "wrong password"});
+                }else{
+                    jwt.sign(item.toJSON(), secret, {expiresIn: '168h'}, function(err, token){
+                        if(err){
+                            res.json({kq:0, err:"Token generate error: " + err});
+                        }else{
+                            req.session.token = token;
+                            res.json({token:token});
+                        }
+                    });
+                }
+            });
+        }else{
+            res.json({kq:0, err: " Wrong username"});
         }
     });
+});
 
-    //save
-    var newproduct = new Product({
-        name: req.body.txtName,
-        image: req.file.filename,
-        price: req.body.price,
-        detail: req.body.txtproduct
+
+app.get("/:p", function (req, res) {
+    checkToken(req, res);
+});
+
+function checkToken(req, res){
+    if(req.session.token){
+        jwt.verify(req.session.token, secret, function(err, decoded){
+            if(err){
+                res.redirect("http://localhost:3000/login");
+            }else{
+                res.render("Home", { Admin: req.params.p});
+            }
+        })
+    }else{
+        res.send("not login yet");
+    }   
+}
+
+app.post("/addUser", function (req, res) {
+
+    bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
+        let admin = new User({
+            username    : req.body.username,
+            password    : hash,
+            level       : req.body.level,
+            active      : req.body.active,
+            name        : req.body.name,
+            email       : req.body.email,
+            address     : req.body.address,
+            phone       : req.body.phone
+        });
+        admin.save(function (err) {
+            if (err) {
+                res.json({ kq: 0 });
+            } else {
+                res.json(admin);
+            }
+        });
     });
-    res.json(newproduct);
-    // newproduct.save(function (err) {
-    //     if (err) {
-    //         res.json({ kq: 0,"err":"error save book" });
-    //     } else {
-    //        Category.findOneAndUpdate(
-    //            {_id:req.body.selectproduct},
-    //            { $push: {details_id:newproduct._id} },
-    //            function(err){
-    //             if (err) {
-    //                 res.json({ kq: 0, "err":err });
-    //             }else{
-    //                 res.json({ kq: 1});
-    //             }
-    //        });
-    //     }
-    // });
 });
 
 
@@ -168,60 +164,130 @@ app.post("/product", function (req, res) {
 
 
 
+// app.get("/cate", function (req, res) {
+//     res.render("cate");
+// });
+// app.get("/form", function (req, res) {
+//     res.render("Form");
+// });
+
+// app.post("/cate", function (req, res) {
+//     var newdetails = new Category({
+//         name: req.body.txtCate,
+//         details_id: []
+//     });
+//     newdetails.save(function (err) {
+//         if (err) {
+//             console.log("save details error: " + err);
+//             res.json({ kq: 0 });
+//         } else {
+//             console.log("save details seccessfully");
+//             res.json({ kq: 1 });
+//         }
+//     })
+// });
+
+// app.get("/product", function (req, res) {
+//     Category.find(function (err, items) {
+//         if (err) {
+//             res.send("Error");
+//         } else {
+//             console.log(items);
+//             res.render("Product", { pros: items });
+//         }
+//     })
+// });
 
 
 
+// app.post("/product", function (req, res) {
+//     //upload
+//     upload(req, res, function (err) {
+//         if (err instanceof multer.MulterError) {
+//             console.log("A Multer error occurred when uploading.");
+//             res.json({ kq: 0, "err": err });
+//         } else if (err) {
+//             console.log("An unknown error occurred when uploading." + err);
+//             res.json({ kq: 0, "err": err });
+//         } else {
+//             console.log("Upload is okay");
+//             console.log(req.file.filename); // Thông tin file đã upload
+//             //res.send({ kq: 1, "file": req.file.filename });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// app.post("/login", function (req, res) {
-//     //Login
-//     User.findOne({username:req.body.txtUsertname}, function(err, item){
-//         if(!err & item != null){
-//             console.log("pw " + req.body.txtPassword + "....." + item.password);
-//             bcrypt.compare(req.body.txtPassword, item.password, function(err2, res2){
-//                 if(res2 == false){
-//                     res.json({kq:0, err: "wrong password"});
-//                 }else{
-//                     jwt.sign(item.toJSON(), secret, {expiresIn: '168h'}, function(err, token){
-//                         if(err){
-//                             res.json({kq:0, err:"Token generate error: " + err});
-//                         }else{
-//                             req.session.token = token;
-//                             res.json({token:token});
+//             //save
+//             var newproduct = new Product({
+//                 name: req.body.txtNameProduct,
+//                 image: req.file.filename,
+//                 price: req.body.price,
+//                 detail: req.body.txtproduct
+//             });
+//             newproduct.save(function (err) {
+//                 if (err) {
+//                     res.json({ kq: 0, "err": "error save product" });
+//                 } else {
+//                     Category.findOneAndUpdate(
+//                         { _id: req.body.selectproduct},
+//                         { $push: { details_id: newproduct._id } },
+//                         function (err) {
+//                             if (err) {
+//                                 res.json({ kq: 0, "err": err });
+//                             } else {
+//                                 res.json({ kq: 1 });
+//                             }
 //                         }
-//                     });
+//                     );
 //                 }
 //             });
-//         }else{
-//             res.json({kq:0, err: " Wrong username"});
 //         }
 //     });
 // });
 
-// app.get("/", function(req, res){
-//     checkToken(req, res);
-// });
 
-// function checkToken(req, res){
-//     if(req.session.token){
-//         jwt.verify(req.session.token, secret, function(err, decoded){
-//             if(err){
-//                 res.send("Wrong verify!!!");
-//             }else{
-//                 res.json(decoded);
-//             }
-//         })
-//     }   
-// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
