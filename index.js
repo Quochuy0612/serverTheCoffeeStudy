@@ -105,7 +105,7 @@ function checkToken(req, res){
             }
         })
     }else{
-        res.send("not login yet");
+        res.send("you are not authorized");
     }   
 }
 
@@ -135,112 +135,76 @@ app.post("/addUser", function (req, res) {
 
 
 
+app.post("/formCoffee", function (req, res) {
+    var newdetails = new Category({
+        name: req.body.txtCate,
+        details_id: []
+    });
+    newdetails.save(function (err) {
+        if (err) {
+            console.log("save details error: " + err);
+            res.json({ kq: 0 });
+        } else {
+            console.log("save details seccessfully");
+            res.json({ kq: 1 });
+        }
+    })
+});
+
+app.get("/formCoffee", function (req, res) {
+    Category.find(function (err, items) {
+        if (err) {
+            res.send("Error");
+        } else {
+            console.log(items);
+            res.render("formCoffee", { pros: items });
+        }
+    })
+});
 
 
 
+app.post("/formCoffee", function (req, res) {
+    //upload
+    upload(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            console.log("A Multer error occurred when uploading.");
+            res.json({ kq: 0, "err": err });
+        } else if (err) {
+            console.log("An unknown error occurred when uploading." + err);
+            res.json({ kq: 0, "err": err });
+        } else {
+            console.log("Upload is okay");
+            console.log(req.file.filename); // Thông tin file đã upload
+            //res.send({ kq: 1, "file": req.file.filename });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// app.get("/cate", function (req, res) {
-//     res.render("cate");
-// });
-// app.get("/form", function (req, res) {
-//     res.render("Form");
-// });
-
-// app.post("/cate", function (req, res) {
-//     var newdetails = new Category({
-//         name: req.body.txtCate,
-//         details_id: []
-//     });
-//     newdetails.save(function (err) {
-//         if (err) {
-//             console.log("save details error: " + err);
-//             res.json({ kq: 0 });
-//         } else {
-//             console.log("save details seccessfully");
-//             res.json({ kq: 1 });
-//         }
-//     })
-// });
-
-// app.get("/product", function (req, res) {
-//     Category.find(function (err, items) {
-//         if (err) {
-//             res.send("Error");
-//         } else {
-//             console.log(items);
-//             res.render("Product", { pros: items });
-//         }
-//     })
-// });
-
-
-
-// app.post("/product", function (req, res) {
-//     //upload
-//     upload(req, res, function (err) {
-//         if (err instanceof multer.MulterError) {
-//             console.log("A Multer error occurred when uploading.");
-//             res.json({ kq: 0, "err": err });
-//         } else if (err) {
-//             console.log("An unknown error occurred when uploading." + err);
-//             res.json({ kq: 0, "err": err });
-//         } else {
-//             console.log("Upload is okay");
-//             console.log(req.file.filename); // Thông tin file đã upload
-//             //res.send({ kq: 1, "file": req.file.filename });
-
-//             //save
-//             var newproduct = new Product({
-//                 name: req.body.txtNameProduct,
-//                 image: req.file.filename,
-//                 price: req.body.price,
-//                 detail: req.body.txtproduct
-//             });
-//             newproduct.save(function (err) {
-//                 if (err) {
-//                     res.json({ kq: 0, "err": "error save product" });
-//                 } else {
-//                     Category.findOneAndUpdate(
-//                         { _id: req.body.selectproduct},
-//                         { $push: { details_id: newproduct._id } },
-//                         function (err) {
-//                             if (err) {
-//                                 res.json({ kq: 0, "err": err });
-//                             } else {
-//                                 res.json({ kq: 1 });
-//                             }
-//                         }
-//                     );
-//                 }
-//             });
-//         }
-//     });
-// });
+            //save
+            var newproduct = new Product({
+                name: req.body.txtNameProduct,
+                image: req.file.filename,
+                price: req.body.price,
+                detail: req.body.txtproduct
+            });
+            newproduct.save(function (err) {
+                if (err) {
+                    res.json({ kq: 0, "err": "error save product" });
+                } else {
+                    Category.findOneAndUpdate(
+                        { _id: req.body.selectproduct},
+                        { $push: { details_id: newproduct._id } },
+                        function (err) {
+                            if (err) {
+                                res.json({ kq: 0, "err": err });
+                            } else {
+                                res.json({ kq: 1 });
+                            }
+                        }
+                    );
+                }
+            });
+        }
+    });
+});
 
 
 
