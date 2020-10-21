@@ -25,7 +25,7 @@
                 </div>
             </div>
             <div class="box-content">
-                <form class="form-horizontal" action="" method="POST">
+                <form class="form-horizontal" action="formCoffee_pros" method="POST">
                     <fieldset>
                         <div class="control-group">
                             <label class="control-label" for="typeahead">Thêm Danh Mục Coffee</label>
@@ -41,32 +41,36 @@
                 </form>
             </div>
             <div class="box-content">
-                <form class="form-horizontal" action="" method="POST" enctype="multipart/form-data">
+                <form class="form-horizontal" action="/formCoffee_pro" method="POST" enctype="multipart/form-data">
                     <fieldset>
                         <div class="control-group">
                             <label class="control-label" for="typeahead">Danh Mục Coffee </label>
                             <div class="controls">
-                                <select name="selectproduct">
-                                    <option>123</option>
+                                <select name="selectproduct" id="selectproduct">
+                                    <% products.forEach(function(product){ %>
+                                        <option value="<%- product._id %>">
+                                            <%- product.name %>
+                                        </option>
+                                    <% }); %>
                                 </select>
                             </div>
                         </div>
                         <div class="control-group">
                             <label class="control-label" for="typeahead">Tên Sản Phẩm </label>
                             <div class="controls">
-                                <input type="text" name="txtNameProduct" class="span4 typeahead" id="typeahead"/>
+                                <input type="text" name="txtNameProduct" class="span4 typeahead" id="typeahead" />
                             </div>
                         </div>
                         <div class="control-group">
                             <label class="control-label" for="fileInput">Hình Ảnh Sản Phẩm</label>
                             <div class="controls">
-                                <input class="input-file uniform_on" id="fileInput" type="file" name="productImage"/>
+                                <input class="input-file uniform_on" id="fileInput" type="file" name="productImage" />
                             </div>
                         </div>
                         <div class="control-group">
                             <label class="control-label" for="typeahead">Đơn Giá Sản Phẩm </label>
                             <div class="controls">
-                                <input type="text" name="price" class="span3 typeahead" id="typeahead"/>
+                                <input type="text" name="price" class="span3 typeahead" id="typeahead" />
                             </div>
                         </div>
                         <div class="control-group hidden-phone">
