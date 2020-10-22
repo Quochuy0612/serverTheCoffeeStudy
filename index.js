@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 //Mongoose
 const mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://Admin:thecoffeestudy@cluster0.cfccb.mongodb.net/TheCoffeeStudy?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify : false, useCreateIndex: true}, function (err) {
+mongoose.connect('mongodb+srv://Admin:thecoffeestudy@cluster0.cfccb.mongodb.net/TheCoffeeStudy?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true }, function (err) {
     if (err) {
         console.log("Mongoodb connected error!!!")
     } else {
@@ -31,17 +31,20 @@ var privateKey = "*(jkljA&(^312hj1ASJDgk1!!!!!@@";
 const User = require("./Models/User");
 const Token = require("./Models/Token");
 const Category = require("./Models/Category");
+const Course = require("./Models/Course");
 
 //session
 var session = require('express-session');
 app.set('trust proxy', 1); // trust first proxy
 app.use(session({
-    secret: 'keyboard cat', 
+    secret: 'keyboard cat',
     cookie: { maxAge: 60000000 }
 }));
 
-// SanPham
+// routes
 require("./routes/SanPham")(app, RandomString);
+require("./routes/Blog")(app, RandomString);
+require("./routes/KhoaHoc")(app, RandomString);
 
 //User - Resgiter
 app.post("/User/Register", function (req, res) {
@@ -63,10 +66,10 @@ app.post("/User/Register", function (req, res) {
                         var khachhang = new User({
                             Username: req.body.Username,
                             Password: hash,
-                            Level: req.body.level,
+                            Level: req.body.Level,
                             Active: false,
                             CodeActive: RandomString(30),
-                            Group: 0,
+                            Group: req.body.Group,
                             RegisterDate: Date.now(),
 
                             Name: req.body.Name,
@@ -158,6 +161,7 @@ app.post("/login", function (req, res) {
             res.json({ kq: 0, errMsg: err });
         } else {
             if (!data) {
+                res.alert
                 res.json({ kq: 0, errMsg: "Username này chưa đăng kí." });
             } else {
 
@@ -210,14 +214,11 @@ app.post("/login", function (req, res) {
                                                         res.json({ kq: 0, errMsg: err });
                                                     } else {
                                                         req.session.token = token;
-                                                        res.json({ kq: 1, token: token });
+                                                        res.redirect("http://localhost:3000/Admin");
                                                     }
                                                 });
                                             }
                                         });
-
-
-
                                     }
                                 });
 
@@ -265,265 +266,34 @@ app.get("/:p", function (req, res) {
 
 function checkToken(req, res) {
     if (req.session.token) {
-        Category.find(function (err, data) {
-            if (err) {
-                res.json({ kq: 0, errMsg: err });
-            } else {
-                res.render("Home",{page:req.params.p , products : data});
-            }
-        });
-        
+        res.render("Home", { page: req.params.p });
     } else {
         res.send("you are not authorized");
     }
 };
 
-app.post("/dashboard", function(req, res){
+app.post("/dashboard", function (req, res) {
     /*
     if(UserAuthentication(req, res)){
         //XXX()
     }
     */
-   UserAuthentication(req, res);
+    UserAuthentication(req, res);
 })
 
-function SayHi(res){
-    res.json({kq:1});
+function SayHi(res) {
+    res.json({ kq: 1 });
 }
 
-function UserAuthentication(request, response){
-    Token.find({Token:request.headers.token, State:true}, function(err, data){
+function UserAuthentication(request, response) {
+    Token.find({ Token: request.headers.token, State: true }, function (err, data) {
         console.log(data.length);
-        if(data.length==0){
-            response.json({kq:-1, errMsg:"Wrong token."});
+        if (data.length == 0) {
+            response.json({ kq: -1, errMsg: "Wrong token." });
             return false;
-        }else{
+        } else {
             return SayHi(response);
         }
     });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// app.get("/login", function (req, res) {
-//     res.render("Login");
-// });
-
-// app.post("/login", function (req, res) {
-//     //Login
-//     User.findOne({ username: req.body.username }, function (err, item) {
-//         if (!err & item != null) {
-//             console.log("pw " + req.body.password + "....." + item.password);
-//             bcrypt.compare(req.body.txtPassword, item.password, function (err2, res2) {
-//                 if (res2 == false) {
-//                     res.json({ kq: 0, err: "wrong password" });
-//                 } else {
-//                     jwt.sign(item.toJSON(), secret, { expiresIn: '168h' }, function (err, token) {
-//                         if (err) {
-//                             res.json({ kq: 0, err: "Token generate error: " + err });
-//                         } else {
-//                             req.session.token = token;
-//                             res.json({ token: token });
-//                         }
-//                     });
-//                 }
-//             });
-//         } else {
-//             res.json({ kq: 0, err: " Wrong username" });
-//         }
-//     });
-// });
-
-// app.get("/:p", function (req, res) {
-//     checkToken(req, res);
-// });
-
-
-// function checkToken(req, res) {
-//     if (req.session.token) {
-//         jwt.verify(req.session.token, secret, function (err, decoded) {
-//             if (err) {
-//                 res.redirect("http://localhost:3000/login");
-//             } else {
-//                 res.render("Home", { page: req.params.p }); 
-//             }
-//         })
-//     } else {
-//         res.send("you are not authorized");
-//     }
-// };
-
-
-// app.post("/addUser", function (req, res) {
-
-//     bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
-//         let admin = new User({
-//             username: req.body.username,
-//             password: hash,
-//             level: req.body.level,
-//             active: req.body.active,
-//             name: req.body.name,
-//             email: req.body.email,
-//             address: req.body.address,
-//             phone: req.body.phone
-//         });
-//         admin.save(function (err) {
-//             if (err) {
-//                 res.json({ kq: 0 });
-//             } else {
-//                 res.json(admin);
-//             }
-//         });
-//     });
-// });
-
-
-
-
-// //multer
-// var multer = require('multer');
-// var storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, 'public/upload')
-//     },
-//     filename: function (req, file, cb) {
-//         cb(null, Date.now() + "-" + file.originalname)
-//     }
-// });
-// var upload = multer({
-//     storage: storage,
-//     fileFilter: function (req, file, cb) {
-//         console.log(file);
-//         if (file.mimetype == "image/png" ||
-//             file.mimetype == "image/jpeg" ||
-//             file.mimetype == "image/jpg") {
-//             cb(null, true)
-//         } else {
-//             return cb(new Error('Only image are allowed!'))
-//         }
-//     }
-// }).single("productImage");
-
-
-
-// app.post("/formCoffee", function (req, res) {
-//     var newdetails = new Category({
-//         name: req.body.txtCate,
-//         details_id: []
-//     });
-//     newdetails.save(function (err) {
-//         if (err) {
-//             res.json({ kq: 0, errMsg:err});
-//         } else {
-//             Category.find(function (err, items) {
-//                 if(err){
-//                     res.json({kq:0, errMsg:err});
-//                 }else{
-//                     res.json({kq:1, product: items });
-//                 }
-//             })
-//         }
-//     })
-// });
-
-// app.get("/formCoffee", function (req, res) {
-//     Category.find(function (err, items) {
-//         if (err) {
-//             res.send("Error");
-//         } else {
-//             console.log(items);
-//             res.render("Home", { page: "formCoffee", pros: items });
-//         }
-//     })
-// });
-
-// app.post("/formCoffee", function (req, res) {
-//     //upload
-//     upload(req, res, function (err) {
-//         if (err instanceof multer.MulterError) {
-//             console.log("A Multer error occurred when uploading.");
-//             res.json({ kq: 0, "err": err });
-//         } else if (err) {
-//             console.log("An unknown error occurred when uploading." + err);
-//             res.json({ kq: 0, "err": err });
-//         } else {
-//             console.log("Upload is okay");
-//             console.log(req.file.filename); // Thông tin file đã upload
-//             //res.send({ kq: 1, "file": req.file.filename });
-
-//             //save
-//             var newproduct = new Product({
-//                 name: req.body.txtNameProduct,
-//                 image: req.file.filename,
-//                 price: req.body.price,
-//                 detail: req.body.txtproduct
-//             });
-//             newproduct.save(function (err) {
-//                 if (err) {
-//                     res.json({ kq: 0, "err": "error save product" });
-//                 } else {
-//                     Category.findOneAndUpdate(
-//                         { _id: req.body.selectproduct },
-//                         { $push: { details_id: newproduct._id } },
-//                         function (err) {
-//                             if (err) {
-//                                 res.json({ kq: 0, "err": err });
-//                             } else {
-//                                 res.json({ kq: 1 });
-//                             }
-//                         }
-//                     );
-//                 }
-//             });
-//         }
-//     });
-// });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

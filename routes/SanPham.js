@@ -6,7 +6,7 @@ const Product = require("../Models/Details");
 var multer = require('multer');
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'public/upload_imagges')
+        cb(null, 'public/upload_images')
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + "-" + file.originalname)
@@ -55,6 +55,16 @@ module.exports = function (app, RandomString) {
         });
     });
 
+    app.get("/formCoffee", function (req, res) {
+        Category.find(function (err, dataStudy) {
+            if (err) {
+                res.json({ kq: 0, errMsg: err });
+            } else {
+                res.render("Home", { page:"formCoffee", products: dataStudy});
+            }
+        });
+    });
+
     //thêm sản phẩm
     app.post("/formCoffee_pro", function (req, res) {
         //upload
@@ -66,10 +76,7 @@ module.exports = function (app, RandomString) {
                 console.log("An unknown error occurred when uploading." + err);
                 res.json({ kq: 0, "err": err });
             } else {
-                // console.log("Upload is okay");
-                // console.log(req.file.filename); // Thông tin file đã upload
-                //res.send({ kq: 1, "file": req.file.filename });
-
+                
                 //save
                 var newproduct = new Product({
                     name: req.body.txtNameProduct,
