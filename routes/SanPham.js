@@ -54,13 +54,20 @@ module.exports = function (app, RandomString) {
             }
         });
     });
+    app.get("/formCoffee_pros", function (req, res) {
+        if (err) {
+            res.json({ kq: 0, errMsg: err });
+        } else {
+            res.render("Home", { page: "formCoffee" });
+        }
+    });
 
     app.get("/formCoffee", function (req, res) {
         Category.find(function (err, dataStudy) {
             if (err) {
                 res.json({ kq: 0, errMsg: err });
             } else {
-                res.render("Home", { page:"formCoffee", products: dataStudy});
+                res.render("Home", { page: "formCoffee", products: dataStudy });
             }
         });
     });
@@ -76,7 +83,7 @@ module.exports = function (app, RandomString) {
                 console.log("An unknown error occurred when uploading." + err);
                 res.json({ kq: 0, "err": err });
             } else {
-                
+
                 //save
                 var newproduct = new Product({
                     name: req.body.txtNameProduct,
